@@ -1,0 +1,53 @@
+name: git
+
+services:
+  server:
+    image: git-server:latest
+    build:
+      context: ./server
+      dockerfile: dockerfile
+      args:
+        GIT_UID: ${GIT_SERVER_UID:-998}
+        GIT_GID: ${GIT_SERVER_GID:-998}
+    pull_policy: never
+    restart: unless-stopped
+    cpus: 0.5
+    mem_limit: 256M
+    memswap_limit: 256M
+    mem_reservation: 64M
+    pids_limit: 256
+    volumes:
+      - server-repositories:/srv/git
+      - server-ssh-host-keys:/etc/ssh/host-keys
+      - type: bind
+        source: ${GIT_SERVER_SSH_AUTHORIZED_KEYS_DIR:?GIT_SERVER_SSH_AUTHORIZED_KEYS_DIR is not set}
+        target: /etc/ssh/authorized-keys
+        read_only: true
+        bind:
+          create_host_path: false
+    ports:
+      - "${GIT_SERVER_IP_ADDRESS:?GIT_SERVER_IP_ADDRESS is not set}:${GIT_SERVER_SSH_PORT:?GIT_SERVER_SSH_PORT is not set}:22/tcp"
+    networks:
+      - server
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETGID
+      - SETUID
+      - SYS_CHROOT
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /run:nosuid,nodev,noexec,mode=700,uid=0,gid=0,size=1m # sshd pid file
+      - /tmp:nosuid,nodev,noexec,mode=700,uid=${GIT_SERVER_UID:-998},gid=${GIT_SERVER_GID:-998},size=16m
+
+volumes:
+  server-ssh-host-keys:
+    name: git-server-ssh-host-keys
+  server-repositories:
+    name: git-server-repositories
+
+networks:
+  server:
+    name: git-server

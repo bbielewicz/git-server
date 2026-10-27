@@ -1,0 +1,3 @@
+#!/bin/sh
+echo "Interactive shell is disabled"
+exit 128

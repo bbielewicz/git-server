@@ -1,0 +1,58 @@
+# OpenSSH generally uses the first value set for each setting.
+Include /etc/ssh/sshd_config.d/*.conf
+
+# Host keys are generated on first startup and stored in the host-keys volume.
+HostKey /etc/ssh/host-keys/ssh_host_ed25519_key
+HostKey /etc/ssh/host-keys/ssh_host_rsa_key
+
+# Restrict access to the git account and enforce SSH public-key authentication.
+AllowUsers git
+AuthenticationMethods publickey
+PermitRootLogin no
+PermitEmptyPasswords no
+PubkeyAuthentication yes
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+
+# Authorized keys are retrieved dynamically on each login.
+AuthorizedKeysFile none
+AuthorizedKeysCommand /usr/local/libexec/authorized-keys-command.sh
+AuthorizedKeysCommandUser nobody
+
+# Connection limits
+LoginGraceTime 60
+MaxAuthTries 3
+MaxSessions 10
+MaxStartups 10:30:30
+
+# Disable per-source penalties to avoid restricting clients sharing a source
+# IP address. PerSourceMaxStartups still limits concurrent unauthenticated
+# connections from a single source address.
+PerSourcePenalties no
+PerSourceMaxStartups 5
+
+# Keep idle connections alive and disconnect clients that stop responding.
+ClientAliveInterval 30
+ClientAliveCountMax 3
+
+# Disable PTY allocation and execution of per-user SSH RC files.
+PermitTTY no
+PermitUserRC no
+
+# Disable the message of the day at login.
+PrintMotd no
+
+# Disable all SSH forwarding features. Explicitly disable individual forwarding
+# options as well, making the effective configuration clear when inspecting it.
+DisableForwarding yes
+AllowAgentForwarding no
+AllowStreamLocalForwarding no
+AllowTcpForwarding no
+GatewayPorts no
+PermitListen none
+PermitOpen none
+PermitTunnel no
+X11Forwarding no
+
+# Allow clients to send the Git protocol version through the SSH environment.
+AcceptEnv GIT_PROTOCOL

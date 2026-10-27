@@ -1,0 +1,18 @@
+# System-wide Git server configuration.
+
+[init]
+	# Use main as the default branch for newly initialized repositories.
+	defaultBranch = main
+
+[receive]
+	# Limit the size of incoming pack data.
+	maxInputSize = 1g
+	# Check the integrity of received objects.
+	fsckObjects = true
+	# Protect branches from destructive changes.
+	denyNonFastForwards = true
+	denyDeletes = true
+
+[uploadpack]
+	# Allow clients to request partial clones using object filters.
+	allowFilter = true

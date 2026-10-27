@@ -1,0 +1,38 @@
+FROM alpine:3.24.3
+
+ARG GIT_UID=998 \
+    GIT_GID=998
+
+RUN set -x \
+  # install packages
+  && apk add --no-cache \
+    git \
+    openssh-keygen \
+    openssh-server \
+  # create git user
+  && addgroup -S -g $GIT_GID git \
+  && adduser -S -u $GIT_UID -h /var/lib/git -H -s $(which git-shell) -D -G git -g git git \
+  # unlock git account for public key login, '*' matches no password
+  && echo 'git:*' | chpasswd -e \
+  # create git home directory, owned by root so git user cannot change it
+  && mkdir -p -m 755 /var/lib/git \
+  # create git repositories directory
+  && mkdir -p -m 755 /srv/git \
+  && chown git:git /srv/git \
+  # create mount points for host and authorized keys
+  && mkdir -p -m 700 /etc/ssh/host-keys \
+  && mkdir -p -m 755 /etc/ssh/authorized-keys \
+  # clear motd
+  && > /etc/motd
+
+COPY --chmod=644 gitconfig /etc/gitconfig
+COPY --chmod=755 git-shell-commands /var/lib/git/git-shell-commands/
+COPY --chmod=644 sshd_config /etc/ssh/sshd_config
+COPY --chmod=755 authorized-keys-command.sh /usr/local/libexec/
+COPY --chmod=755 docker-entrypoint.sh /usr/local/bin/
+
+EXPOSE 22
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+
+CMD ["/usr/sbin/sshd", "-D", "-e"]
